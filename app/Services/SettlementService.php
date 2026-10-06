@@ -1,0 +1,4 @@
+<?php
+namespace App\Services;
+use App\Models\{Settlement,Group,User}; use App\Exceptions\{InvalidSettlementException,ApiException};
+class SettlementService { public function create(array $d,Group $g,User $u):Settlement { $to=(string)$d['paid_to'];if($to===(string)$u->_id)throw new InvalidSettlementException('Payer and receiver must be different users.',422);$ids=array_map('strval',$g->member_ids??[]);if(!in_array($to,$ids,true))throw new InvalidSettlementException('Receiver is not a member of this group.',422);$balance=app(BalanceService::class)->balances($g);$current=collect($balance)->firstWhere('user_id',(string)$u->_id);$debt=max(0,-(float)($current['balance']??0));if((float)$d['amount']>$debt+0.01)throw new InvalidSettlementException('Settlement cannot exceed the payer outstanding debt.',422);return Settlement::create(['group_id'=>(string)$g->_id,'paid_by'=>(string)$u->_id,'paid_to'=>$to,'amount'=>(float)$d['amount'],'note'=>$d['note']??null]); } }

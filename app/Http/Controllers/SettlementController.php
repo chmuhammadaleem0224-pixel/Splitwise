@@ -1,0 +1,4 @@
+<?php
+namespace App\Http\Controllers;
+use Illuminate\Http\Request;use App\Models\Settlement;use App\Http\Requests\CreateSettlementRequest;use App\Services\{GroupService,SettlementService};use App\Support\ApiResponse;
+class SettlementController extends Controller {public function __construct(private GroupService $groups,private SettlementService $settlements,private ApiResponse $response){}public function index(Request $r,string $group){$g=$this->groups->get($group,$r->user());return $this->response->success('Settlement history retrieved successfully.',Settlement::where('group_id',(string)$g->_id)->orderBy('created_at','desc')->paginate((int)$r->query('per_page',20)));}public function store(CreateSettlementRequest $r,string $group){$g=$this->groups->get($group,$r->user());return $this->response->success('Settlement created successfully.',$this->settlements->create($r->validated(),$g,$r->user()),201);}}
